@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from database import connect_db
 
 app = Flask(__name__)
@@ -10,12 +10,32 @@ def listar_imoveis():
         return jsonify({"erro": "Falha na conexão com o banco de dados"}), 500
 
     try:
-        cursor = conn.cursor()
+        tipo = request.args.get('tipo')
+        cidade = request.args.get('cidade')
+
         query = """
             SELECT id, logradouro, tipo_logradouro, bairro, cidade, cep, tipo, valor, data_aquisicao
             FROM imoveis
         """
-        cursor.execute(query)
+        condicoes = []
+        params = []
+
+        if tipo:
+            condicoes.append("tipo = %s")
+            params.append(tipo)
+        if cidade:
+            condicoes.append("cidade = %s")
+            params.append(cidade)
+
+        if condicoes:
+            query += " WHERE " + " AND ".join(condicoes)
+
+        cursor = conn.cursor()
+        if params:
+            cursor.execute(query, params)
+        else:
+            cursor.execute(query)
+
         linhas = cursor.fetchall()
 
         imoveis = []
