@@ -158,5 +158,63 @@ def criar_imovel():
         if conn and conn.is_connected():
             conn.close()
 
+@app.route('/imoveis/<int:id>', methods=['PUT'])
+def atualizar_imovel(id):
+    dados = request.get_json(silent=True)
+    if not dados:
+        return jsonify({"erro": "JSON inválido ou corpo da requisição vazio"}), 400
+
+    conn = connect_db()
+    if not conn:
+        return jsonify({"erro": "Falha na conexão com o banco de dados"}), 500
+
+    try:
+        cursor = conn.cursor()
+
+        query_busca = "SELECT id FROM imoveis WHERE id = %s"
+        cursor.execute(query_busca, (id,))
+        if not cursor.fetchone():
+            return jsonify({"erro": "Imóvel não encontrado"}), 404
+
+        logradouro = dados.get('logradouro')
+        tipo_logradouro = dados.get('tipo_logradouro')
+        bairro = dados.get('bairro')
+        cidade = dados.get('cidade')
+        cep = dados.get('cep')
+        tipo = dados.get('tipo')
+        valor = dados.get('valor')
+        data_aquisicao = dados.get('data_aquisicao')
+
+        query_update = """
+            UPDATE imoveis
+            SET logradouro = %s, tipo_logradouro = %s, bairro = %s, cidade = %s, cep = %s, tipo = %s, valor = %s, data_aquisicao = %s
+            WHERE id = %s
+        """
+        cursor.execute(query_update, (
+            logradouro, tipo_logradouro, bairro, cidade, cep, tipo, valor, data_aquisicao, id
+        ))
+        conn.commit()
+
+        imovel_atualizado = {
+            "id": id,
+            "logradouro": logradouro,
+            "tipo_logradouro": tipo_logradouro,
+            "bairro": bairro,
+            "cidade": cidade,
+            "cep": cep,
+            "tipo": tipo,
+            "valor": float(valor) if valor is not None else None,
+            "data_aquisicao": str(data_aquisicao) if data_aquisicao is not None else None
+        }
+
+        return jsonify(imovel_atualizado), 200
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
+    finally:
+        if 'cursor' in locals() and cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
+
 if __name__ == '__main__':
     app.run(debug=True)
