@@ -101,5 +101,62 @@ def buscar_imovel_por_id(id):
         if conn and conn.is_connected():
             conn.close()
 
+@app.route('/imoveis', methods=['POST'])
+def criar_imovel():
+    dados = request.get_json(silent=True)
+    if not dados:
+        return jsonify({"erro": "JSON inválido ou corpo da requisição vazio"}), 400
+
+    logradouro = dados.get('logradouro')
+    cidade = dados.get('cidade')
+
+    if not logradouro or not cidade:
+        return jsonify({"erro": "Campos obrigatórios ausentes: 'logradouro' e 'cidade'"}), 400
+
+    tipo_logradouro = dados.get('tipo_logradouro')
+    bairro = dados.get('bairro')
+    cep = dados.get('cep')
+    tipo = dados.get('tipo')
+    valor = dados.get('valor')
+    data_aquisicao = dados.get('data_aquisicao')
+
+    conn = connect_db()
+    if not conn:
+        return jsonify({"erro": "Falha na conexão com o banco de dados"}), 500
+
+    try:
+        cursor = conn.cursor()
+        query = """
+            INSERT INTO imoveis (logradouro, tipo_logradouro, bairro, cidade, cep, tipo, valor, data_aquisicao)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        cursor.execute(query, (
+            logradouro, tipo_logradouro, bairro, cidade, cep, tipo, valor, data_aquisicao
+        ))
+        conn.commit()
+
+        novo_id = cursor.lastrowid
+
+        imovel_criado = {
+            "id": novo_id,
+            "logradouro": logradouro,
+            "tipo_logradouro": tipo_logradouro,
+            "bairro": bairro,
+            "cidade": cidade,
+            "cep": cep,
+            "tipo": tipo,
+            "valor": float(valor) if valor is not None else None,
+            "data_aquisicao": str(data_aquisicao) if data_aquisicao is not None else None
+        }
+
+        return jsonify(imovel_criado), 201
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
+    finally:
+        if 'cursor' in locals() and cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
+
 if __name__ == '__main__':
     app.run(debug=True)
