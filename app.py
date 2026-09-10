@@ -216,5 +216,32 @@ def atualizar_imovel(id):
         if conn and conn.is_connected():
             conn.close()
 
+@app.route('/imoveis/<int:id>', methods=['DELETE'])
+def deletar_imovel(id):
+    conn = connect_db()
+    if not conn:
+        return jsonify({"erro": "Falha na conexão com o banco de dados"}), 500
+
+    try:
+        cursor = conn.cursor()
+
+        query_busca = "SELECT id FROM imoveis WHERE id = %s"
+        cursor.execute(query_busca, (id,))
+        if not cursor.fetchone():
+            return jsonify({"erro": "Imóvel não encontrado"}), 404
+
+        query_delete = "DELETE FROM imoveis WHERE id = %s"
+        cursor.execute(query_delete, (id,))
+        conn.commit()
+
+        return '', 204
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
+    finally:
+        if 'cursor' in locals() and cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
+
 if __name__ == '__main__':
     app.run(debug=True)
