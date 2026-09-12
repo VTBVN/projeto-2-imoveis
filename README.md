@@ -44,3 +44,7 @@ Exemplo de JSON de Saída (201 Created ou 200 OK):
   "valor": 750000.00,
   "data_aquisicao": "2023-05-10"
 }
+
+
+URL de Produção (AWS EC2)
+http://18.227.74.168/imoveis
