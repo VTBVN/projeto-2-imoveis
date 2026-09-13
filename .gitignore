@@ -4,3 +4,4 @@ __pycache__/
 .env
 *.sql
 .pytest_cache/
+!imoveis.sql

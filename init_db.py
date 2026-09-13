@@ -7,7 +7,7 @@ if not conn:
 
 try:
     cursor = conn.cursor()
-    with open('schema.sql', 'r', encoding='utf-8') as f:
+    with open('imoveis.sql', 'r', encoding='utf-8') as f:
         sql = f.read()
     for comando in sql.split(';'):
         if comando.strip():
